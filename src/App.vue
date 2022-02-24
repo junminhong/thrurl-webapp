@@ -1,11 +1,10 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </div>
-  <router-view />
+  <n-message-provider>
+    <n-dialog-provider>
+      <router-view />
+    </n-dialog-provider>
+  </n-message-provider>
 </template>
-
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;

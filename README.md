@@ -1,24 +1,9 @@
-# thrurl-webapp
-
-## Project setup
-```
-yarn install
-```
-
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
-
-### Compiles and minifies for production
-```
-yarn build
-```
-
-### Lints and fixes files
-```
-yarn lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- [x] 登入
+- [ ] 註冊
+- [x] 縮短連結
+- [x] 連結訊息
+- [ ] 點擊成效
+    - 分頁要做
+- [ ] 編輯連結
+- [x] 轉址
+- [x] 安全性檢查
