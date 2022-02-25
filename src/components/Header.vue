@@ -35,6 +35,7 @@
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useCookies } from "vue3-cookies";
+import { memberHost, getMemberInfoAPI } from "../api/main";
 export default {
   name: "Header",
   setup() {
@@ -69,6 +70,7 @@ export default {
           cookies.remove("atomic_token");
           cookies.remove("refresh_atomic_token");
           nickName.value = "";
+          router.push("/");
           break;
         case "data center":
           router.push("/data-center");
@@ -77,7 +79,7 @@ export default {
     }
     onMounted(() => {
       axios
-        .get("http://127.0.0.1:9200/api/v1/member/profile", {
+        .get(memberHost + getMemberInfoAPI, {
           headers: {
             Authorization: "Bearer " + cookies.get("atomic_token"),
           },

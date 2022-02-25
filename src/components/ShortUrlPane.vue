@@ -10,6 +10,7 @@
 import { useDialog } from "naive-ui";
 import { ref } from "vue";
 import { useCookies } from 'vue3-cookies';
+import { thrurlHost, thrurlWebHost, shortenUrlAPI } from "../api/main";
 export default {
   name: "ShortUrlPane",
   setup() {
@@ -20,7 +21,7 @@ export default {
     async function shortenUrl() {
       await axios
         .post(
-          "http://127.0.0.1:9220/api/v1/short-url",
+          thrurlHost + shortenUrlAPI,
           {
             source_url: sourceUrl.value,
           },
@@ -34,7 +35,7 @@ export default {
           if (result.data.result_code === 1002) {
             dialog.success({
               title: "Thrurl",
-              content: "http://127.0.0.1:8080/" + result.data.data.shorten_url,
+              content: thrurlWebHost + "/" + result.data.data.shorten_url,
               positiveText: "複製",
             });
           } else {

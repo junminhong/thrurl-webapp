@@ -1,20 +1,26 @@
 <template>
   <Header />
-  <n-space vertical :size="12">
-    <n-data-table
-      :bordered="true"
-      :columns="columns"
-      :data="data"
-      :pagination="pagination"
-    />
-  </n-space>
-  <n-space style="margin-top: 30px" justify="center">
-    <n-pagination
-      :v-model:page="page"
-      :page-count="pageSize"
-      :on-update:page="refreshTable"
-    />
-  </n-space>
+  <n-grid :cols="24">
+    <n-gi span="1"></n-gi>
+    <n-gi span="22">
+      <n-space vertical :size="12">
+        <n-data-table
+          :bordered="true"
+          :columns="columns"
+          :data="data"
+          :pagination="pagination"
+        />
+      </n-space>
+      <n-space style="margin-top: 30px" justify="center">
+        <n-pagination
+          :v-model:page="page"
+          :page-count="pageSize"
+          :on-update:page="refreshTable"
+        />
+      </n-space>
+    </n-gi>
+    <n-gi span="1"></n-gi>
+  </n-grid>
 </template>
 
 <script>
@@ -23,6 +29,7 @@ import { onMounted, reactive, h, defineComponent, ref, nextTick } from "vue";
 import { NButton, NSwitch, NInput, useMessage } from "naive-ui";
 import { useCookies } from "vue3-cookies";
 import { useRouter } from "vue-router";
+import { thrurlHost, shortUrlAPI, getShortUrlListAPI } from "../api/main";
 export default {
   name: "DataCenter",
   components: { Header },
@@ -34,7 +41,7 @@ export default {
     const page = ref(1);
     const router = useRouter();
 
-    const createColumns = ({ clickInfo, handleChange }) => {
+    const createColumns = ({ clickInfo, updateWhoClick }) => {
       return [
         {
           title: "ID",
@@ -53,8 +60,9 @@ export default {
                 if (v !== "") {
                   row.sourceA = v;
                 } else {
-                  row.sourceA = "無";
+                  message.warning("該欄位不得為空！");
                 }
+                updateData(row);
               },
             });
           },
@@ -74,6 +82,7 @@ export default {
                 } else {
                   row.sourceB = "無";
                 }
+                updateData(row);
               },
             });
           },
@@ -93,6 +102,7 @@ export default {
                   } else {
                     row.abPercent = v;
                   }
+                  updateData(row);
                 } else {
                   row.abPercent = "0";
                 }
@@ -106,7 +116,7 @@ export default {
           render(row) {
             return h(NSwitch, {
               value: row.whoClick,
-              onUpdateValue: (value) => handleChange(row, value),
+              onUpdateValue: (value) => updateWhoClick(row, value),
             });
           },
         },
@@ -145,7 +155,6 @@ export default {
         }
         function handleChange() {
           props.onUpdateValue(inputValue.value);
-          console.log("a");
           isEdit.value = false;
         }
         return () =>
@@ -173,25 +182,74 @@ export default {
     const axios = require("axios");
     const { cookies } = useCookies();
     onMounted(() => {
-      refreshTable()
+      refreshTable();
     });
+    function convertData(data) {
+      if (data === "") {
+        return "無";
+      } else {
+        return data;
+      }
+    }
+    const trackerIDTmp = ref("");
+
+    function clearTrackerID() {
+      trackerIDTmp.value = "";
+    }
+
+    function updateData(data) {
+      if (data.trackerID === trackerIDTmp.value) {
+        window.setTimeout(clearTrackerID, 1000);
+        return;
+      }
+      trackerIDTmp.value = data.trackerID;
+      var sourceB = "";
+      if (data.sourceB !== "無") {
+        sourceB = data.sourceB;
+      }
+      axios
+        .put(
+          thrurlHost + shortUrlAPI,
+          {
+            tracker_id: data.trackerID,
+            source_url_a: data.sourceA,
+            source_url_b: sourceB,
+            ab_percent: Number(data.abPercent),
+            who_click: data.whoClick,
+          },
+          {
+            headers: {
+              Authorization: "Bearer " + cookies.get("atomic_token"),
+            },
+          }
+        )
+        .then((result) => {
+          if (result.data.result_code === 1002) {
+            message.success("資料更新完成！");
+          }
+        });
+    }
     function refreshTable(page) {
       axios
-        .get("http://127.0.0.1:9220/api/v1/short-url/list?limit=10&offset=" + 10*(page-1), {
-          headers: {
-            Authorization: "Bearer " + cookies.get("atomic_token"),
-          },
-        })
+        .get(
+          thrurlHost + getShortUrlListAPI +
+            10 * (page - 1),
+          {
+            headers: {
+              Authorization: "Bearer " + cookies.get("atomic_token"),
+            },
+          }
+        )
         .then((result) => {
           pageSize.value = result.data.data.page;
           result.data.data.short_url_list.forEach(function (value) {
             const shortUrlInfo = {
               trackerID: value.tracker_id,
-              sourceA: value.source_url_a,
+              sourceA: convertData(value.source_url_a),
               anotherSourceA: value.source_url_a,
-              sourceB: value.source_url_b,
+              sourceB: convertData(value.source_url_b),
               anotherSourceB: value.source_url_b,
-              abPercent: value.ab_percent,
+              abPercent: parseInt(value.ab_percent, 10),
               whoClick: value.who_click,
             };
             dataTmp.push(shortUrlInfo);
@@ -204,14 +262,16 @@ export default {
     return {
       columns: createColumns({
         clickInfo(row) {
-          message.info(`Play ${row.trackerID}`);
-          console.log(row);
+          // message.info(`Play ${row.trackerID}`);
+          // console.log(row);
           const trackerID = row.trackerID;
           router.push({ path: "/click-info", query: { trackerID } });
         },
-        handleChange(row, value) {
-          message.info(`${row.trackerID} Update value: ${value}`);
-          row.whoClick = !row.whoClick;
+        updateWhoClick(row, value) {
+          // message.info(`${row.trackerID} Update value: ${value}`);
+          row.whoClick = value;
+          // console.log("b");
+          updateData(row);
         },
       }),
       data,

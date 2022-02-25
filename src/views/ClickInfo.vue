@@ -1,14 +1,20 @@
 <template>
   <Header />
-   <n-statistic label="記錄筆數">
+  <n-grid :cols="24">
+    <n-gi span="1"></n-gi>
+    <n-gi span="22">
+      <n-statistic label="記錄筆數">
         {{ clickAmount }}
       </n-statistic>
-  <n-data-table
-    :columns="columns"
-    :data="data"
-    :pagination="pagination"
-    :bordered="false"
-  />
+      <n-data-table
+        :columns="columns"
+        :data="data"
+        :pagination="pagination"
+        :bordered="false"
+      />
+    </n-gi>
+    <n-gi span="1"></n-gi>
+  </n-grid>
 </template>
 
 <script>
@@ -16,6 +22,7 @@ import Header from "@/components/Header.vue";
 import { onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useCookies } from "vue3-cookies";
+import { thrurlHost, getClickInfoAPI } from "../api/main";
 export default {
   name: "ClickInfo",
   components: { Header },
@@ -57,7 +64,7 @@ export default {
     onMounted(() => {
       axios
         .get(
-          "http://127.0.0.1:9220/api/v1/short-url/click-info?tracker-id=" +
+          thrurlHost + getClickInfoAPI +
             route.query.trackerID,
           {
             headers: {
@@ -80,7 +87,6 @@ export default {
             });
             clickAmount.value = result.data.data.click_amount;
           }
-          console.log(result.data);
         });
     });
     const formatDate = (current_datetime) => {

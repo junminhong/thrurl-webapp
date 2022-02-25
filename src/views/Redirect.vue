@@ -33,7 +33,7 @@
 <script>
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
+import { thrurlHost, getRedirectAPI, recordClickInfoAPI, checkUrlSafeAPI } from "../api/main";
 export default {
   name: "Redirect",
   setup() {
@@ -50,7 +50,7 @@ export default {
       trackerID.value = route.params.trackerID;
       axios
         .get(
-          "http://127.0.0.1:9220/api/v1/short-url/redirect?tracker-id=" +
+          thrurlHost + getRedirectAPI +
             trackerID.value
         )
         .then((result) => {
@@ -62,7 +62,7 @@ export default {
         .then(() => {
           axios
             .get(
-              "http://127.0.0.1:9220/api/v1/url/check-safe?source-url=" +
+              thrurlHost + checkUrlSafeAPI +
                 sourceUrl.value
             )
             .then((result) => {
@@ -83,7 +83,7 @@ export default {
 
     async function gotoSourceUrl() {
       await axios.get(
-        "http://127.0.0.1:9220/api/v1/url/record?tracker-id=" + trackerID.value
+        thrurlHost + recordClickInfoAPI + trackerID.value
       ).then(()=>{
           window.location = sourceUrl.value
       });

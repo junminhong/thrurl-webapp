@@ -18,7 +18,7 @@
       />
     </n-form-item-row>
   </n-form>
-  <n-button type="info" bordered circle block strong @click="Login">
+  <n-button type="info" bordered circle block strong @click="login">
     登入
   </n-button>
 </template>
@@ -28,27 +28,36 @@ import { ref } from "vue";
 import { useCookies } from "vue3-cookies";
 import { useRouter } from "vue-router";
 import { useDialog } from "naive-ui";
+import { memberHost, loginAPI } from "../api/main";
 
 export default {
   name: "SignIn",
   setup() {
     const email = ref("");
     const password = ref("");
-    const axios = require("axios");
     const { cookies } = useCookies();
     const router = useRouter();
     const dialog = useDialog();
+    const axios = require("axios");
+
     function gotoHome() {
       dialog.destroyAll();
       router.push("/");
     }
-    async function Login() {
+    async function login() {
       await axios
-        .post("http://127.0.0.1:9200/api/v1/member/login", {
-          email: email.value,
-          password: password.value,
-        })
+        .post(
+          memberHost + loginAPI,
+          {
+            email: email.value,
+            password: password.value,
+          },
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        )
         .then((result) => {
+          console.log(memberHost);
           if (result.data.result_code === 1007) {
             console.log(result.data);
             cookies.set("atomic_token", result.data.data.atomic_token, "4h");
@@ -60,24 +69,24 @@ export default {
             dialog.success({
               title: "Thrurl會員中心",
               content: "登入成功，正在為你跳轉",
-              loading: true
+              loading: true,
             });
             window.setTimeout(gotoHome, 1000);
           } else {
             dialog.error({
               title: "Thrurl會員中心",
               content: "登入失敗，請確保帳號正確",
-               loading: true
+              loading: true,
             });
           }
+          email.value = "";
+          password.value = "";
         });
-      email.value = "";
-      password.value = "";
     }
     return {
       email,
       password,
-      Login,
+      login,
     };
   },
 };
