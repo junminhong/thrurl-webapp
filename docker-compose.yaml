@@ -1,0 +1,25 @@
+version: "3.7"
+
+services:
+  thrurl-webapp:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    working_dir: /webApp
+    volumes:
+      - ./:/webApp
+    ports:
+      - "9230:8080"
+    container_name: thrurl-webApp
+    entrypoint: yarn serve --mode production
+    restart: always
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - nginx
+
+networks:
+  nginx:
+    name: nginx
